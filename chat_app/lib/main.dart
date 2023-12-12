@@ -1,3 +1,4 @@
+import 'package:chat_app/screens/auth_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -22,14 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Flutter Firebase Demo'),
-          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(.3),
-          foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
-        ),
-        body: Container(),
-      ),
+      home: const AuthScreen()
     );
   }
 }
