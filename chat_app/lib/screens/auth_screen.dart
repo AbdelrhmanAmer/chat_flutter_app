@@ -1,6 +1,9 @@
 import 'dart:developer';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+final _firebase = FirebaseAuth.instance;
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
@@ -17,14 +20,30 @@ class _AuthScreenState extends State<AuthScreen> {
   String _enteredEmail = '';
   String _enteredPassword = '';
 
-  void _summit(){
+  void _summit()async{
     bool isValid = _formKey.currentState!.validate();
-    if(isValid){
-      _formKey.currentState!.save();
-
-      log(_enteredEmail);
-      log(_enteredPassword);
+    if(!isValid){
+      return ;
     }
+    _formKey.currentState!.save();
+    if(_isLogin){
+
+    }else{
+      try{
+        final UserCredential  userCredential = await _firebase.createUserWithEmailAndPassword(
+            email: _enteredEmail,
+            password: _enteredPassword
+        );
+      }on FirebaseAuthException catch(e){
+        ScaffoldMessenger.of(context).clearSnackBars();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(e.message ?? 'Authentication failed.')
+        ),
+        );
+      }
+    }
+    log(_enteredEmail);
+    log(_enteredPassword);
   }
 
 
@@ -58,7 +77,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             keyboardType: TextInputType.emailAddress,
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
-                            onSaved: (value) => setState(() => _enteredEmail = value!),
+                            onSaved: (value) =>  _enteredEmail = value!,
                             validator: (value){
                               if( value == null ||
                                   value.trim().isEmpty ||
@@ -76,8 +95,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                             keyboardType: TextInputType.text,
                             obscureText: true,
-                            obscuringCharacter: '*',
-                            onSaved: (value) => setState(() => _enteredPassword = value!),
+                            onSaved: (value) =>  _enteredPassword = value! ,
                             validator: (value){
                               if( value == null ||
                                   value.trim().length<6) {
@@ -107,8 +125,6 @@ class _AuthScreenState extends State<AuthScreen> {
                               style: const TextStyle(fontSize: 13),
                             ),
                           )
-        
-        
                         ],
                       ),
                     ),
