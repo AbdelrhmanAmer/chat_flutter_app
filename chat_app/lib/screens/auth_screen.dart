@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:chat_app/widgets/user_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -22,6 +23,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _loginMode = true;
   String _enteredEmail = '';
   String _enteredPassword = '';
+  String _enteredUsername = '';
   File? _selectedImage;
   var _isUploading = false;
   void _summit()async
@@ -49,7 +51,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final UserCredential userCredential = await _firebase
             .createUserWithEmailAndPassword(
             email: _enteredEmail,
-            password: _enteredPassword
+            password: _enteredPassword,
         );
         final Reference storageRef = FirebaseStorage.instance.ref()
             .child('user_images')
@@ -58,6 +60,17 @@ class _AuthScreenState extends State<AuthScreen> {
         await storageRef.putFile(_selectedImage!);
         final String imageUrl = await storageRef.getDownloadURL();
         log(imageUrl);
+
+        final _firestore = FirebaseFirestore.instance
+            .collection('users')
+        .doc(userCredential.user!.uid)
+        .set({
+          'username': _enteredUsername,
+          'email': _enteredEmail,
+          'image_url': imageUrl
+
+        })
+        ;
       }
     }
     on FirebaseAuthException catch(e)
@@ -101,6 +114,21 @@ class _AuthScreenState extends State<AuthScreen> {
                         children: [
                           if(!_loginMode)
                             UserImagePicker(onPickImage: (image)=> _selectedImage = image),
+                          if(!_loginMode)
+                            TextFormField(
+                              decoration: const InputDecoration( labelText: "Username" ),
+                              autocorrect: false,
+                              onSaved: (value) =>  _enteredUsername = value!,
+                              validator: (value){
+                                if( value == null ||
+                                    value.trim().length < 4)
+                                {
+                                  return 'Please enter at least 4 characters.';
+                                }
+                                return null;
+                              },
+                            ),
+                          const SizedBox(height: 15,),
                           TextFormField(
                             decoration: const InputDecoration(
                                 labelText: "Email Address"
@@ -162,7 +190,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ),
                 ),
-
               )
             ],
           ),
